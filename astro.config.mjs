@@ -34,6 +34,10 @@ export default defineConfig({
     partytown({
       config: {
         forward: ['dataLayer.push']
+        // الحل هنا: منع Partytown من الوصول للـ APIs المهجورة
+        resolveProperty: (url, property) => {
+        if (property === 'sharedStorage' || property === 'attributionReporting') {
+        return null;
       }
     })
   ],
