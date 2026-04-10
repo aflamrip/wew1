@@ -48,7 +48,7 @@ export default defineConfig({
     build: {
       // بما أنك استخدمت inlineStylesheets، يفضل ترك cssCodeSplit: false 
       // لدمج التنسيقات في ملف واحد ثم تضمينه داخل الـ HTML
-      cssCodeSplit: false, 
+      cssCodeSplit: true, 
       rollupOptions: {
         output: {
           assetFileNames: '_astro/[name].[hash][extname]',
