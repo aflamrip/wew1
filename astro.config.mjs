@@ -6,26 +6,26 @@ import sitemap from '@astrojs/sitemap';
 import partytown from '@astrojs/partytown';
 import tailwindcss from '@tailwindcss/vite';
 
-// https://astro.build/config
 export default defineConfig({
   site: 'https://ma3ak.top',
 
-  // External image domains still allowed for <img> src passthrough
   image: {
-    domains: ['static.ma3ak.top']
+    domains: ['static.ma3ak.top'],
+    // نوصي باستخدام remotePatterns للأمان والدقة مستقبلاً
+    remotePatterns: [{
+      protocol: 'https',
+      hostname: 'static.ma3ak.top',
+    }],
   },
 
   output: 'server',
 
   adapter: cloudflare({
-    // Use Cloudflare Images binding for runtime image optimisation.
-    // The binding is declared in wrangler.jsonc as "IMAGES".
-    // For build-time prerendered pages we fall back to 'compile'.
-    imageService: { build: 'compile', runtime: 'cloudflare-binding' },
-
-    // NOTE: platformProxy and experimentalJsonConfig have been REMOVED
-    // in @astrojs/cloudflare v13. The dev server now uses the real
-    // workerd runtime via the Cloudflare Vite plugin automatically.
+    // إعداد ذكي: يستخدم الـ Binding في وقت التشغيل والمعالجة العادية في وقت البناء
+    imageService: {
+      build: 'compile',
+      runtime: 'cloudflare-binding'
+    },
   }),
 
   integrations: [
@@ -33,13 +33,16 @@ export default defineConfig({
     sitemap(),
     partytown({
       config: {
-        forward: ['dataLayer.push']
-        // الحل هنا: منع Partytown من الوصول للـ APIs المهجورة
+        forward: ['dataLayer.push'],
+        // تصحيح الخطأ في إغلاق الأقواس وإضافة المنطق لمنع تحذيرات الـ APIs المهجورة
         resolveProperty: (url, property) => {
-        if (property === 'sharedStorage' || property === 'attributionReporting') {
-        return null;
-      }
-    })
+          if (property === 'sharedStorage' || property === 'attributionReporting') {
+            return null;
+          }
+          return undefined; // السماح لباقي الخصائص بالعمل بشكل طبيعي
+        },
+      },
+    }),
   ],
 
   vite: {
@@ -47,9 +50,6 @@ export default defineConfig({
       tailwindcss()
     ],
     ssr: {
-      // miniflare is no longer needed for local dev in v13 — workerd
-      // runs directly via the Cloudflare Vite plugin.
-      // Keep only truly incompatible packages here if needed.
       external: []
     }
   }
