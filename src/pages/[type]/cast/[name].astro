@@ -5,6 +5,10 @@ import { CDN_URLS } from '../../../lib/constants';
 
 const { type, name } = Astro.params;
 
+// تحويل النوع إلى نص عربي للعرض في الـ Breadcrumbs
+const typeLabel = (type === 'movie' || type === 'movies') ? 'الأفلام' : 'المسلسلات';
+const typeLink = (type === 'movie' || type === 'movies') ? '/movie' : '/tv';
+
 // Decode the actor name from the URL
 const actorName = decodeURIComponent(name || '').trim();
 
@@ -34,6 +38,7 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=7200, stale-while-
         <nav class="flex items-center gap-2 text-xs text-zinc-500 font-bold mb-6 uppercase tracking-tighter">
            <a href="/" class="hover:text-primary transition-colors">الرئيسية</a>
            <span class="opacity-30">/</span>
+           <a href={typeLink} class="hover:text-primary transition-colors">{typeLabel}</a>
            <span class="opacity-30">/</span>
            <span class="text-amber-400">طاقم العمل</span>
            <span class="opacity-30">/</span>
@@ -54,6 +59,20 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=7200, stale-while-
               </p>
            </div>
         </div>
+
+        <!-- Quick links -->
+        <div class="mt-6 flex gap-3 flex-wrap">
+          <a href={`/type/cast/${encodeURIComponent(actorName)}`}
+             class="px-4 py-2 bg-primary/10 border border-primary/30 text-primary rounded-xl text-sm font-bold hover:bg-primary/20 transition-all">
+            🎬 الأفلام فقط
+          </a>
+          <a href={`/tv/cast/${encodeURIComponent(actorName)}`}
+             class="px-4 py-2 bg-amber-500/10 border border-amber-500/30 text-amber-400 rounded-xl text-sm font-bold hover:bg-amber-500/20 transition-all">
+            📺 المسلسلات فقط
+          </a>
+        </div>
+      </div>
+    </div>
 
     <!-- CastSearch: show both movies and TV -->
     <CastSearch
