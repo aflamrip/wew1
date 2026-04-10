@@ -56,20 +56,6 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=7200, stale-while-
            </div>
         </div>
 
-        <!-- Quick links -->
-        <div class="mt-6 flex gap-3 flex-wrap">
-          <a href={`/movie/cast/${encodeURIComponent(actorName)}`}
-             class="px-4 py-2 bg-primary/10 border border-primary/30 text-primary rounded-xl text-sm font-bold hover:bg-primary/20 transition-all">
-            🎬 الأفلام فقط
-          </a>
-          <a href={`/tv/cast/${encodeURIComponent(actorName)}`}
-             class="px-4 py-2 bg-amber-500/10 border border-amber-500/30 text-amber-400 rounded-xl text-sm font-bold hover:bg-amber-500/20 transition-all">
-            📺 المسلسلات فقط
-          </a>
-        </div>
-      </div>
-    </div>
-
     <!-- CastSearch: show both movies and TV -->
     <CastSearch
       client:load
