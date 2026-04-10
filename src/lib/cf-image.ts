@@ -67,16 +67,3 @@ export function buildPosterUrl(type: 'movies' | 'tv', id: string): string {
   const prefix = id.toString().substring(0, 2);
   return `${STATIC_BASE}/${type}/${prefix}/${id}/${id}.webp`;
 }
-
-/**
- * Info image for social sharing:
- * static.ma3ak.top/{type}/{prefix}/{id}/{id}.info.webp
- *
- * @example
- * buildInfoImageUrl('tv', '2096819')
- * // → https://static.ma3ak.top/tv/20/2096819/2096819.info.webp
- */
-export function buildInfoImageUrl(type: 'movies' | 'tv', id: string): string {
-  const prefix = id.toString().substring(0, 2);
-  return `${STATIC_BASE}/${type}/${prefix}/${id}/${id}.info.webp`;
-}
