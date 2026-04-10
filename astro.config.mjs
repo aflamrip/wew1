@@ -49,7 +49,7 @@ export default defineConfig({
     build: {
       // FIX: Improve CSS chunking — split critical from non-critical
       // This prevents the monolithic Layout.*.css from being render-blocking
-      cssCodeSplit: true,
+      cssCodeSplit: false,
       rollupOptions: {
         output: {
           // Keep CSS assets with predictable names for caching
