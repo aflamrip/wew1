@@ -1,7 +1,7 @@
 <script lang="ts">
   /**
    * CastSearch.svelte
-   * الإصلاح الرئيسي: أزرار الفلتر تعمل client-side بدون إعادة fetch
+   * الإصلاح: أزرار الفلتر client-side بالكامل — بدون re-fetch
    */
 
   let {
@@ -9,7 +9,7 @@
     cdnBase   = 'https://static.ma3ak.top',
   } = $props<{ actorName: string; cdnBase?: string }>();
 
-  type Item = { id: string; slug: string; title: string; year: string; type: 'movie' | 'tv' };
+  type Item   = { id: string; slug: string; title: string; year: string; type: 'movie' | 'tv' };
   type Filter = 'all' | 'movie' | 'tv';
 
   let allItems     = $state<Item[]>([]);
@@ -17,51 +17,44 @@
   let error        = $state('');
   let activeFilter = $state<Filter>('all');
 
-  // ─── Derived — purely reactive, zero re-fetch ─────────────────────────────
+  // ─── Derived (zero fetch) ──────────────────────────────────────────────────
   let visibleItems = $derived<Item[]>(
     activeFilter === 'all' ? allItems : allItems.filter(i => i.type === activeFilter)
   );
   let movieCount = $derived(allItems.filter(i => i.type === 'movie').length);
   let tvCount    = $derived(allItems.filter(i => i.type === 'tv').length);
 
-  // ─── Single fetch on mount ────────────────────────────────────────────────
+  // ─── Single fetch — movies + TV in parallel ───────────────────────────────
   $effect(() => {
     if (!actorName) return;
     let cancelled = false;
+    loading = true; allItems = []; error = '';
 
-    (async () => {
-      loading = true; allItems = []; error = '';
-      try {
-        const [mr, tr] = await Promise.all([
-          fetch(`/api/cast/movie?name=${encodeURIComponent(actorName)}`),
-          fetch(`/api/cast/tv?name=${encodeURIComponent(actorName)}`),
-        ]);
-        const [md, td]: [Item[], Item[]] = await Promise.all([
-          mr.ok ? mr.json() : Promise.resolve([]),
-          tr.ok ? tr.json() : Promise.resolve([]),
-        ]);
+    Promise.all([
+      fetch(`/api/cast/movie?name=${encodeURIComponent(actorName)}`).then(r => r.ok ? r.json() : []),
+      fetch(`/api/cast/tv?name=${encodeURIComponent(actorName)}`).then(r => r.ok ? r.json() : []),
+    ])
+      .then(([md, td]: [Item[], Item[]]) => {
         if (!cancelled) {
           allItems = [
             ...md.map(i => ({ ...i, type: 'movie' as const })),
             ...td.map(i => ({ ...i, type: 'tv'    as const })),
           ];
         }
-      } catch {
-        if (!cancelled) error = 'حدث خطأ أثناء البحث، يرجى المحاولة لاحقاً.';
-      } finally {
-        if (!cancelled) loading = false;
-      }
-    })();
+      })
+      .catch(() => { if (!cancelled) error = 'حدث خطأ أثناء البحث، يرجى المحاولة لاحقاً.'; })
+      .finally(() => { if (!cancelled) loading = false; });
 
     return () => { cancelled = true; };
   });
 
   function posterUrl(item: Item): string {
-    const t = item.type === 'movie' ? 'movies' : 'tv';
-    const p = item.id.substring(0, 2);
-    const raw = `${cdnBase}/${t}/${p}/${item.id}/${item.id}.webp`;
+    const t   = item.type === 'movie' ? 'movies' : 'tv';
+    const raw = `${cdnBase}/${t}/${item.id.substring(0, 2)}/${item.id}/${item.id}.webp`;
     return `https://ma3ak.top/cdn-cgi/image/width=300,height=450,fit=cover,quality=80,format=auto/${raw}`;
   }
+
+  function setFilter(f: Filter) { activeFilter = f; }
 </script>
 
 <div class="space-y-8">
@@ -74,7 +67,7 @@
         جاري البحث عن أعمال {actorName}...
       </div>
       <div class="w-full bg-zinc-800 rounded-full h-1.5 overflow-hidden">
-        <div class="bg-gradient-to-l from-amber-500 to-orange-500 h-full rounded-full animate-pulse w-2/3"></div>
+        <div class="bg-gradient-to-l from-amber-500 to-orange-500 h-full w-2/3 rounded-full animate-pulse"></div>
       </div>
     </div>
   {/if}
@@ -89,30 +82,25 @@
   <!-- Results -->
   {#if !loading && !error && allItems.length > 0}
 
-    <!-- ─── Filter buttons ──────────────────────────────────────────────── -->
+    <!-- Filter buttons -->
     <div class="flex items-center gap-3 flex-wrap">
-
       <button
-        onclick={() => { activeFilter = 'all'; }}
-        class={[
-          'px-5 py-2.5 rounded-xl text-sm font-black transition-all duration-200 border',
-          activeFilter === 'all'
-            ? 'bg-white text-zinc-900 border-white shadow-lg scale-105'
-            : 'bg-zinc-900 text-zinc-400 border-zinc-700 hover:border-zinc-500 hover:text-white',
-        ].join(' ')}
+        onclick={() => setFilter('all')}
+        class={`px-5 py-2.5 rounded-xl text-sm font-black transition-all duration-200 border
+                ${activeFilter === 'all'
+                  ? 'bg-white text-zinc-900 border-white shadow-lg scale-[1.04]'
+                  : 'bg-zinc-900 text-zinc-400 border-zinc-700 hover:border-zinc-500 hover:text-white'}`}
       >
         الكل <span class="opacity-60 text-xs mr-1">({allItems.length})</span>
       </button>
 
       {#if movieCount > 0}
         <button
-          onclick={() => { activeFilter = 'movie'; }}
-          class={[
-            'px-5 py-2.5 rounded-xl text-sm font-black transition-all duration-200 border',
-            activeFilter === 'movie'
-              ? 'bg-primary text-white border-primary shadow-lg shadow-primary/30 scale-105'
-              : 'bg-zinc-900 text-zinc-400 border-zinc-700 hover:border-primary/50 hover:text-primary',
-          ].join(' ')}
+          onclick={() => setFilter('movie')}
+          class={`px-5 py-2.5 rounded-xl text-sm font-black transition-all duration-200 border
+                  ${activeFilter === 'movie'
+                    ? 'bg-primary text-white border-primary shadow-lg shadow-primary/30 scale-[1.04]'
+                    : 'bg-zinc-900 text-zinc-400 border-zinc-700 hover:border-primary/50 hover:text-primary'}`}
         >
           🎬 الأفلام فقط <span class="opacity-60 text-xs mr-1">({movieCount})</span>
         </button>
@@ -120,18 +108,15 @@
 
       {#if tvCount > 0}
         <button
-          onclick={() => { activeFilter = 'tv'; }}
-          class={[
-            'px-5 py-2.5 rounded-xl text-sm font-black transition-all duration-200 border',
-            activeFilter === 'tv'
-              ? 'bg-amber-500 text-black border-amber-400 shadow-lg shadow-amber-500/30 scale-105'
-              : 'bg-zinc-900 text-zinc-400 border-zinc-700 hover:border-amber-500/50 hover:text-amber-400',
-          ].join(' ')}
+          onclick={() => setFilter('tv')}
+          class={`px-5 py-2.5 rounded-xl text-sm font-black transition-all duration-200 border
+                  ${activeFilter === 'tv'
+                    ? 'bg-amber-500 text-black border-amber-400 shadow-lg shadow-amber-500/30 scale-[1.04]'
+                    : 'bg-zinc-900 text-zinc-400 border-zinc-700 hover:border-amber-500/50 hover:text-amber-400'}`}
         >
           📺 المسلسلات فقط <span class="opacity-60 text-xs mr-1">({tvCount})</span>
         </button>
       {/if}
-
     </div>
 
     <!-- Section label -->
@@ -174,20 +159,21 @@
               </div>
             </div>
             <h3 class="mt-2 text-sm font-bold truncate transition-colors
-                       {item.type === 'movie' ? 'text-zinc-300 group-hover:text-primary' : 'text-zinc-300 group-hover:text-amber-400'}">
+                       {item.type === 'movie'
+                         ? 'text-zinc-300 group-hover:text-primary'
+                         : 'text-zinc-300 group-hover:text-amber-400'}">
               {item.title}
             </h3>
           </a>
         {/each}
       </div>
     {:else}
-      <!-- No results for this filter -->
-      <div class="text-center py-16 bg-zinc-900/20 rounded-2xl border border-dashed border-zinc-800">
+      <div class="text-center py-14 bg-zinc-900/20 rounded-2xl border border-dashed border-zinc-800">
         <p class="text-zinc-500 font-bold">
-          لا توجد {activeFilter === 'movie' ? 'أفلام' : 'مسلسلات'} لـ {actorName} في قاعدة البيانات حالياً.
+          لا توجد {activeFilter === 'movie' ? 'أفلام' : 'مسلسلات'} لـ {actorName} حالياً.
         </p>
         <button
-          onclick={() => { activeFilter = 'all'; }}
+          onclick={() => setFilter('all')}
           class="mt-4 px-4 py-2 bg-zinc-800 text-zinc-300 rounded-xl text-sm font-bold hover:bg-zinc-700 transition-colors border border-zinc-700"
         >
           عرض الكل
@@ -195,7 +181,7 @@
       </div>
     {/if}
 
-    <!-- Count summary -->
+    <!-- Summary -->
     <div class="text-center py-2">
       <span class="bg-zinc-900 text-zinc-400 px-5 py-2 rounded-full text-sm font-bold border border-zinc-800">
         {#if activeFilter === 'all' && movieCount > 0 && tvCount > 0}
@@ -205,10 +191,9 @@
         {/if}
       </span>
     </div>
-
   {/if}
 
-  <!-- Empty (no results at all) -->
+  <!-- Empty -->
   {#if !loading && !error && allItems.length === 0}
     <div class="text-center py-32 bg-zinc-900/20 rounded-3xl border border-dashed border-zinc-800">
       <div class="text-6xl mb-6">🎭</div>
