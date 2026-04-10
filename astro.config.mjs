@@ -34,12 +34,13 @@ export default defineConfig({
     partytown({
       config: {
         forward: ['dataLayer.push'],
-        // تصحيح الخطأ في إغلاق الأقواس وإضافة المنطق لمنع تحذيرات الـ APIs المهجورة
+    // إضافة الخصائص المسببة للمشاكل إلى قائمة التجاهل
+        exclude: ['sharedStorage', 'attributionReporting'], 
         resolveProperty: (url, property) => {
           if (property === 'sharedStorage' || property === 'attributionReporting') {
             return null;
           }
-          return undefined; // السماح لباقي الخصائص بالعمل بشكل طبيعي
+          return undefined;السماح لباقي الخصائص بالعمل بشكل طبيعي
         },
       },
     }),
