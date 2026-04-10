@@ -15,6 +15,12 @@ export default defineConfig({
 
   output: 'server',
 
+  // --- إضافة خاصية الـ Inline هنا ---
+  build: {
+    inlineStylesheets: 'always',
+  },
+  // -------------------------------
+
   adapter: cloudflare({
     imageService: { build: 'compile', runtime: 'cloudflare-binding' },
   }),
@@ -25,17 +31,10 @@ export default defineConfig({
     partytown({
       config: {
         forward: ['dataLayer.push'],
-        // FIX: Suppress deprecated API warnings
-        // SharedStorage and AttributionReporting are called by GTM internals
-        // but are not needed for basic analytics. Blocking them silences the
-        // "Uses deprecated APIs" warning in PageSpeed / Chrome DevTools.
         resolveUrl(url) {
-          // Allow all requests through — filtering happens at the browser level
           return url;
         },
-        // Sandbox debug mode OFF in production (reduces noise)
         debug: false,
-        // FIX: Lib location must be correct for SW to load
         lib: '~/partytown/',
       },
     }),
@@ -47,16 +46,14 @@ export default defineConfig({
       external: [],
     },
     build: {
-      // FIX: Improve CSS chunking — split critical from non-critical
-      // This prevents the monolithic Layout.*.css from being render-blocking
-      cssCodeSplit: false,
+      // بما أنك استخدمت inlineStylesheets، يفضل ترك cssCodeSplit: false 
+      // لدمج التنسيقات في ملف واحد ثم تضمينه داخل الـ HTML
+      cssCodeSplit: false, 
       rollupOptions: {
         output: {
-          // Keep CSS assets with predictable names for caching
           assetFileNames: '_astro/[name].[hash][extname]',
           chunkFileNames: '_astro/[name].[hash].js',
           entryFileNames: '_astro/[name].[hash].js',
-          // Split vendor chunks for better caching
           manualChunks(id) {
             if (id.includes('node_modules/plyr')) return 'plyr';
             if (id.includes('node_modules/embla')) return 'embla';
