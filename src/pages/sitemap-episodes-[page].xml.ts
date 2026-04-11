@@ -28,6 +28,7 @@ import {
   CDN_URLS,
   seasonExists,
   fetchSeasonNdjson,
+  formatDateWithOffset,
 } from '../lib/constants';
 
 // ─── Tuneable constants ───────────────────────────────────────────────────────
@@ -70,9 +71,9 @@ function lastmodFromItem(item: any): string {
   const rawTs = item?.data?.publish_date_timestamp;
   if (rawTs) {
     const ts = Number(rawTs) > 9_999_999_999 ? Number(rawTs) / 1000 : Number(rawTs);
-    return new Date(ts * 1000).toISOString();
+    return formatDateWithOffset(ts * 1000);
   }
-  return new Date().toISOString();
+  return formatDateWithOffset();
 }
 
 /**
