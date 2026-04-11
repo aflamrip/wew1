@@ -1,6 +1,6 @@
 // src/pages/sitemap-movie-[page].xml.ts
 import type { APIRoute } from 'astro';
-import { getSitemapData, getPrefix, getFullSiteUrl, CDN_URLS } from '../lib/constants';
+import { getSitemapData, getPrefix, getFullSiteUrl, CDN_URLS, formatDateWithOffset } from '../lib/constants';
 
 const ITEMS_PER_SITEMAP = 500;
 
@@ -30,12 +30,12 @@ export const GET: APIRoute = async (context) => {
     const year    = item.data?.year || '2026';
     const imageUrl = `${CDN_URLS.STATIC}/movies/${prefix}/${id}/${id}.webp`;
 
-    // Build last-modified from published date or fall back to now
+    // Build last-modified in Arabic timezone +03:00
     const rawTs = item.data?.publish_date_timestamp;
-    let lastmod = new Date().toISOString();
+    let lastmod = formatDateWithOffset();
     if (rawTs) {
       const ts = Number(rawTs) > 9999999999 ? Number(rawTs) / 1000 : Number(rawTs);
-      lastmod = new Date(ts * 1000).toISOString();
+      lastmod = formatDateWithOffset(ts * 1000);
     }
 
     return `  <url>
