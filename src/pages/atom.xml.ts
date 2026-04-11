@@ -1,10 +1,10 @@
 // src/pages/atom.xml.ts
 import type { APIRoute } from 'astro';
-import { getSitemapData, getPrefix, getFullSiteUrl, CDN_URLS } from '../lib/constants';
+import { getSitemapData, getPrefix, getFullSiteUrl, CDN_URLS, formatDateWithOffset } from '../lib/constants';
 
 export const GET: APIRoute = async (context) => {
   const siteUrl = getFullSiteUrl(context);
-  const now     = new Date().toISOString();
+  const now = formatDateWithOffset();
 
   const [moviesRaw, tvRaw] = await Promise.all([
     getSitemapData('movie', 5),
@@ -109,8 +109,8 @@ export const GET: APIRoute = async (context) => {
     <title type="text">${escapeXml(entryTitle)}</title>
     <link rel="alternate" type="text/html" href="${escapeXml(entry.pageUrl)}" />
     <link rel="related" type="text/html" href="${escapeXml(entry.watchUrl)}" title="مشاهدة الآن" />
-    <published>${entry.pubDate.toISOString()}</published>
-    <updated>${entry.updatedDate.toISOString()}</updated>
+    <published>${formatDateWithOffset(entry.pubDate)}</published>
+    <updated>${formatDateWithOffset(entry.updatedDate)}</updated>
     <summary type="text">${summary}</summary>
     <content type="html">${contentHtml}</content>
     <author>
