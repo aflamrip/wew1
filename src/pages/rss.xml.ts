@@ -1,10 +1,10 @@
 // src/pages/rss.xml.ts
 import type { APIRoute } from 'astro';
-import { getSitemapData, getPrefix, getFullSiteUrl, CDN_URLS } from '../lib/constants';
+import { getSitemapData, getPrefix, getFullSiteUrl, CDN_URLS, formatDateWithOffset } from '../lib/constants';
 
 export const GET: APIRoute = async (context) => {
   const siteUrl = getFullSiteUrl(context);
-  const now     = new Date().toISOString();
+  const now = formatDateWithOffset();
 
   const [moviesRaw, tvRaw] = await Promise.all([
     getSitemapData('movie', 5),
