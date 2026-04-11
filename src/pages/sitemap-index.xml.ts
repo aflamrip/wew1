@@ -1,6 +1,6 @@
 // src/pages/sitemap-index.xml.ts
 import type { APIRoute } from 'astro';
-import { getSitemapData, getFullSiteUrl } from '../lib/constants';
+import { getSitemapData, getFullSiteUrl, formatDateWithOffset } from '../lib/constants';
 
 /** Shows processed per episode-sitemap page (must match sitemap-episodes-[page].xml.ts) */
 const SHOWS_PER_EPISODE_PAGE = 20;
@@ -9,7 +9,7 @@ const ITEMS_PER_SITEMAP = 500;
 
 export const GET: APIRoute = async (context) => {
   const siteUrl = getFullSiteUrl(context);
-  const now = new Date().toISOString();
+  const now = formatDateWithOffset();
 
   const [movieData, tvData] = await Promise.all([
     getSitemapData('movie', 45),
@@ -45,6 +45,11 @@ export const GET: APIRoute = async (context) => {
   // 4. TV Episodes - watch pages (paginated by show slice)
   for (let i = 1; i <= episodePages; i++) {
     addEntry(`${siteUrl}/sitemap-episodes-${i}.xml`);
+  }
+
+  // 5. Cast pages (paginated)
+  for (let i = 1; i <= castPages; i++) {
+    addEntry(`${siteUrl}/sitemap-cast-${i}.xml`);
   }
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
