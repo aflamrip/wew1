@@ -1,10 +1,10 @@
 // src/pages/sitemap-static.xml.ts
 import type { APIRoute } from 'astro';
-import { getFullSiteUrl, GENRES_LIST } from '../lib/constants';
+import { getFullSiteUrl, GENRES_LIST, formatDateWithOffset } from '../lib/constants';
 
 export const GET: APIRoute = async (context) => {
   const siteUrl = getFullSiteUrl(context);
-  const now = new Date().toISOString();
+  const now = formatDateWithOffset();
 
   const staticPages = [
     { url: '/',           priority: '1.0', changefreq: 'daily'   },
