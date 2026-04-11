@@ -1,4 +1,4 @@
-// src/pages/sitemap-movie-[page].xml.ts
+// src/pages/sitemap-tv-[page].xml.ts
 import type { APIRoute } from 'astro';
 import { getSitemapData, getPrefix, getFullSiteUrl, CDN_URLS, formatDateWithOffset } from '../lib/constants';
 
@@ -13,24 +13,23 @@ export const GET: APIRoute = async (context) => {
   }
 
   const siteUrl = getFullSiteUrl(context);
-  const allMovies = await getSitemapData('movie', 45);
+  const allTV = await getSitemapData('tv', 45);
 
-  const totalPages = Math.max(1, Math.ceil(allMovies.length / ITEMS_PER_SITEMAP));
+  const totalPages = Math.max(1, Math.ceil(allTV.length / ITEMS_PER_SITEMAP));
   if (pageNum > totalPages) {
     return new Response('Not Found', { status: 404 });
   }
 
   const start = (pageNum - 1) * ITEMS_PER_SITEMAP;
-  const slice = allMovies.slice(start, start + ITEMS_PER_SITEMAP);
+  const slice = allTV.slice(start, start + ITEMS_PER_SITEMAP);
 
   const urlEntries = slice.map(item => {
     const slug    = item.data?.slug || '';
     const id      = item.id;
     const prefix  = getPrefix(id);
     const year    = item.data?.year || '2026';
-    const imageUrl = `${CDN_URLS.STATIC}/movies/${prefix}/${id}/${id}.webp`;
+    const imageUrl = `${CDN_URLS.STATIC}/tv/${prefix}/${id}/${id}.webp`;
 
-    // Build last-modified in Arabic timezone +03:00
     const rawTs = item.data?.publish_date_timestamp;
     let lastmod = formatDateWithOffset();
     if (rawTs) {
@@ -39,14 +38,14 @@ export const GET: APIRoute = async (context) => {
     }
 
     return `  <url>
-    <loc>${siteUrl}/movie/${slug}</loc>
+    <loc>${siteUrl}/tv/${slug}</loc>
     <lastmod>${lastmod}</lastmod>
-    <changefreq>monthly</changefreq>
+    <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
       <image:loc>${imageUrl}</image:loc>
       <image:title>${escapeXml(item.data?.title || '')}</image:title>
-      <image:caption>${escapeXml(`فيلم ${item.data?.title || ''} ${year}`)}</image:caption>
+      <image:caption>${escapeXml(`مسلسل ${item.data?.title || ''} ${year}`)}</image:caption>
     </image:image>
   </url>`;
   }).join('\n');
