@@ -23,18 +23,6 @@ export const GET: APIRoute = async (context) => {
   // Episodes: one sitemap page per slice of SHOWS_PER_EPISODE_PAGE shows
   const episodePages = Math.max(1, Math.ceil(tvData.length    / SHOWS_PER_EPISODE_PAGE));
 
-  // Cast
-  const castSet = new Set<string>();
-  for (const item of [...movieData, ...tvData]) {
-    const cast: string[] = Array.isArray(item.data?.cast) ? item.data.cast : [];
-    for (const actor of cast) {
-      if (typeof actor === 'string' && actor.trim()) {
-        castSet.add(actor.trim());
-      }
-    }
-  }
-  const castPages = Math.max(1, Math.ceil(castSet.size / ITEMS_PER_SITEMAP));
-
   // ── Build entries ────────────────────────────────────────────────────────
   const entries: string[] = [];
 
@@ -57,11 +45,6 @@ export const GET: APIRoute = async (context) => {
   // 4. TV Episodes - watch pages (paginated by show slice)
   for (let i = 1; i <= episodePages; i++) {
     addEntry(`${siteUrl}/sitemap-episodes-${i}.xml`);
-  }
-
-  // 5. Cast pages (paginated)
-  for (let i = 1; i <= castPages; i++) {
-    addEntry(`${siteUrl}/sitemap-cast-${i}.xml`);
   }
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
